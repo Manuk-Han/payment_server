@@ -31,7 +31,11 @@ public class SecurityConfig {
         http
                 .addFilter(corsFilter())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll());
+                        .requestMatchers("/").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("http://localhost:3000/", true));
+
 
         return http.build();
     }

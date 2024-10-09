@@ -1,5 +1,6 @@
 package com.study.payment.controller;
 
+import com.study.payment.dto.OAuthAttributes;
 import com.study.payment.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +13,8 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/member/signup")
-    public ResponseEntity<?> signup() {
-        memberService.signup();
+    public ResponseEntity<?> signup(OAuthAttributes attributes) {
+        memberService.signup(attributes);
 
         return ResponseEntity.ok().build();
     }
