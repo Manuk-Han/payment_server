@@ -57,7 +57,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                         Member.builder()
                                 .name(attributes.getName())
                                 .email(attributes.getEmail())
-                                .role(Role.GUEST)
+                                .role(Role.USER)
                                 .build()
                 );
 
