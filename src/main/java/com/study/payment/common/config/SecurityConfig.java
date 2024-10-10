@@ -1,5 +1,6 @@
-package com.study.payment.config;
+package com.study.payment.common.config;
 
+import com.study.payment.common.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -22,6 +23,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public BCryptPasswordEncoder encoder() {
@@ -33,16 +35,18 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilter(corsFilter())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/member/signup").permitAll()
-                        .requestMatchers("/*").permitAll()
+                        .requestMatchers("/member/signup", "/member/signIn").permitAll()
+                        .requestMatchers("/oauth2/**").authenticated()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:3000/home", true));
-
+                .oauth2Login(AbstractHttpConfigurer::disable);
+//                .oauth2Login(oauth2 -> oauth2
+//                        .defaultSuccessUrl("http://localhost:8080/member/signIn/oauth", true));
 
         return http.build();
     }
+
 
     @Bean
     public CorsFilter corsFilter() {
@@ -54,7 +58,6 @@ public class SecurityConfig {
         corsConfig.addExposedHeader(HttpHeaders.SET_COOKIE);
         corsConfig.addExposedHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
         corsConfig.addExposedHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN);
-        corsConfig.addExposedHeader("RefreshToken");
         corsConfig.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
