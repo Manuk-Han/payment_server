@@ -8,6 +8,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
@@ -24,7 +26,11 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         String accessToken = jwtUtil.createAccessToken(principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
         String refreshToken = jwtUtil.createRefreshToken(principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
 
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"accessToken\":\"" + accessToken + "\", \"refreshToken\":\"" + refreshToken + "\"}");
+        String redirectUrl = "http://localhost:3000/home";
+        String PREFIX = "Bearer ";
+        String encodedAccessToken = URLEncoder.encode(PREFIX + accessToken, StandardCharsets.UTF_8);
+        String encodedRefreshToken = URLEncoder.encode(PREFIX + refreshToken, StandardCharsets.UTF_8);
+
+        response.sendRedirect(redirectUrl + "?accessToken=" + encodedAccessToken + "&refreshToken=" + encodedRefreshToken);
     }
 }
