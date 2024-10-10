@@ -25,41 +25,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     private final MemberRepository memberRepository;
     private final RoleRepository roleRepository;
     private final JwtUtil jwtUtil;
-
-//    @Override
-//    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-//        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
-//        OAuth2User oAuth2User = delegate.loadUser(userRequest);
-//
-//        OAuthAttributes attributes = OAuthAttributes.of(userRequest.getClientRegistration().getRegistrationId(),
-//                userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName(),
-//                oAuth2User.getAttributes());
-//
-//        String nameAttributeKey = attributes.getNameAttributeKey();
-//        if (!oAuth2User.getAttributes().containsKey(nameAttributeKey)) {
-//            nameAttributeKey = "sub";
-//        }
-//
-//        Member member = saveOrUpdate(attributes);
-//        String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getHighestUserRole());
-//        String refreshToken = jwtUtil.createRefreshToken(member.getEmail(), member.getHighestUserRole());
-//
-//        Map<String, Object> userAttributes = new HashMap<>(attributes.getAttributes());
-//        userAttributes.put("accessToken", accessToken);
-//        userAttributes.put("refreshToken", refreshToken);
-//
-//        System.out.println("nameAttributeKey: " + nameAttributeKey);
-//        System.out.println("userAttributes: " + userAttributes);
-//
-//        return new PrincipalDetails(member, userAttributes, nameAttributeKey);
-//    }
-
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
-        // OAuthAttributes 객체를 생성하기 위해 필요한 정보 추출
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails()
                 .getUserInfoEndpoint().getUserNameAttributeName();
