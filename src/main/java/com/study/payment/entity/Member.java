@@ -29,7 +29,7 @@ public class Member implements UserDetails {
 
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "member_role",
             joinColumns = @JoinColumn(name = "member_id"),

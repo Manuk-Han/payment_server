@@ -1,5 +1,6 @@
 package com.study.payment.common.config;
 
+import com.study.payment.common.jwt.CustomOAuth2SuccessHandler;
 import com.study.payment.common.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,7 @@ import java.util.Collections;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
 
     @Bean
     public BCryptPasswordEncoder encoder() {
@@ -42,7 +44,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
 //                .oauth2Login(AbstractHttpConfigurer::disable);
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:8080/member/signIn/oauth", true));
+                        .successHandler(customOAuth2SuccessHandler));
 
         return http.build();
     }
