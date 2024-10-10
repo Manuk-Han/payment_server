@@ -1,6 +1,6 @@
 package com.study.payment.common.jwt;
 
-import com.study.payment.common.Role;
+import com.study.payment.common.UserRoles;
 import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.repository.MemberRepository;
@@ -22,13 +22,9 @@ import java.util.Date;
 public class JwtUtil {
     private final String USER_ID = "user_id";
     private final String ROLE = "role";
-
     private final Logger log = LoggerFactory.getLogger(this.getClass().getSimpleName());
-
     private final SecretKey key;
-
     private final long accessTokenExpTime;
-
     private final long refreshTokenExpTime;
 
     private final MemberRepository memberRepository;
@@ -37,8 +33,7 @@ public class JwtUtil {
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.access-token-validity-in-seconds}") long accessTokenExpTime,
             @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenExpTime,
-            MemberRepository memberRepository
-    ) {
+            MemberRepository memberRepository) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.accessTokenExpTime = accessTokenExpTime;
@@ -47,19 +42,19 @@ public class JwtUtil {
     }
 
 
-    public String createAccessToken(String userName, Role role) {
-        return createToken(userName, role, accessTokenExpTime);
+    public String createAccessToken(String userName, UserRoles userRoles) {
+        return createToken(userName, userRoles, accessTokenExpTime);
     }
 
-    public String createRefreshToken(String userName, Role role) {
-        return createToken(userName, role, refreshTokenExpTime);
+    public String createRefreshToken(String userName, UserRoles userRoles) {
+        return createToken(userName, userRoles, refreshTokenExpTime);
     }
 
 
-    private String createToken(String userName, Role role, long expireTime) {
+    private String createToken(String userName, UserRoles userRoles, long expireTime) {
         Claims claims = Jwts.claims()
                 .add(USER_ID, userName)
-                .add(ROLE, role.getTitle())
+                .add(ROLE, userRoles.getTitle())
                 .build();
 
         ZonedDateTime now = ZonedDateTime.now();

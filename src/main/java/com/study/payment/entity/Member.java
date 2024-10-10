@@ -1,14 +1,17 @@
 package com.study.payment.entity;
 
-import com.study.payment.common.Role;
+import com.study.payment.common.UserRoles;
 import com.study.payment.dto.OAuthAttributes;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Builder @Getter @Setter
@@ -26,32 +29,46 @@ public class Member implements UserDetails {
 
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "member_role",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-    }
+    @Transient
+    private Collection<SimpleGrantedAuthority> authorities;
 
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
+    private String provider;
+    private String provideId;
 
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    public String getRoleKey() {
-        return this.role.getKey();
-    }
+    private LocalDateTime createdDateTime;
 
     public Member update(OAuthAttributes attributes) {
         this.name = attributes.getName();
         this.email = attributes.getEmail();
         return this;
     }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        this.getRoles().forEach(role -> {
+            String roleName = role.getUserRoles().getKey();
+            authorities.add(new SimpleGrantedAuthority(roleName));
+        });
+        return authorities;
+    }
+
+    @Override
+    public String getUsername() {
+        return getEmail();
+    }
+
+    public UserRoles getHighestUserRole() {
+        return this.roles.stream()
+                .map(Role::getUserRoles).min((r1, r2) -> r2.ordinal() - r1.ordinal())
+                .orElse(UserRoles.GUEST);
+    }
+
 }

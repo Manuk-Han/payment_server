@@ -46,9 +46,9 @@ public class MemberController {
     }
 
     @PostMapping("/member/signIn")
-    public ResponseEntity<?> signIn(@RequestBody SignInForm signinForm) {
+    public ResponseEntity<?> signIn(@RequestBody SignInForm signInForm) {
         try {
-            JwtDto jwtDto = memberService.signIn(signinForm);
+            JwtDto jwtDto = memberService.signIn(signInForm);
 
             return signIn(jwtDto);
         } catch (CustomException ce) {

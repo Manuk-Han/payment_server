@@ -40,9 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/member/signup", "/member/signIn").permitAll()
                         .requestMatchers("/oauth2/**").authenticated()
                         .anyRequest().authenticated())
-                .oauth2Login(AbstractHttpConfigurer::disable);
-//                .oauth2Login(oauth2 -> oauth2
-//                        .defaultSuccessUrl("http://localhost:8080/member/signIn/oauth", true));
+//                .oauth2Login(AbstractHttpConfigurer::disable);
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("http://localhost:8080/member/signIn/oauth", true));
 
         return http.build();
     }
@@ -52,6 +52,7 @@ public class SecurityConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+        corsConfig.setAllowedOriginPatterns(Collections.singletonList("http://localhost:3000"));
         corsConfig.addAllowedHeader("*");
         corsConfig.addAllowedMethod("*");
         corsConfig.addExposedHeader(HttpHeaders.AUTHORIZATION);
