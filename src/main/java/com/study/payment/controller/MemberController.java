@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @RequiredArgsConstructor
@@ -14,7 +15,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/member/signup")
-    public ResponseEntity<?> signup(SignupForm signupForm) {
+    public ResponseEntity<?> signup(@RequestBody SignupForm signupForm) {
         memberService.signup(signupForm);
 
         return ResponseEntity.ok().build();
