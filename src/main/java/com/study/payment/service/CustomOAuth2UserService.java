@@ -36,7 +36,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-        Member member = saveOrUpdate(attributes);
+        Member member = saveOrUpdate(attributes, registrationId);
         String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getHighestUserRole());
         String refreshToken = jwtUtil.createRefreshToken(member.getEmail(), member.getHighestUserRole());
 
@@ -47,7 +47,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return new PrincipalDetails(member, userAttributes, userNameAttributeName);
     }
 
-    private Member saveOrUpdate(OAuthAttributes attributes) {
+    private Member saveOrUpdate(OAuthAttributes attributes, String registrationId) {
         Member member = memberRepository.findByEmail(attributes.getEmail())
                 .map(entity -> entity.update(attributes))
                 .orElseGet(() -> {
@@ -57,6 +57,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     return Member.builder()
                             .name(attributes.getName())
                             .email(attributes.getEmail())
+                            .provider(registrationId)
                             .roles(new HashSet<>(Arrays.asList(guestRole, userRole)))
                             .build();
                 });

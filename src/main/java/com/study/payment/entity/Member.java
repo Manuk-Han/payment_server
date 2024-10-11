@@ -40,7 +40,6 @@ public class Member implements UserDetails {
     private Collection<SimpleGrantedAuthority> authorities;
 
     private String provider;
-    private String provideId;
 
     private LocalDateTime createdDateTime;
 
