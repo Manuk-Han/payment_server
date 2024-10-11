@@ -8,6 +8,7 @@ import com.study.payment.entity.PrincipalDetails;
 import com.study.payment.entity.Role;
 import com.study.payment.repository.MemberRepository;
 import com.study.payment.repository.RoleRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -17,6 +18,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -25,6 +27,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     private final MemberRepository memberRepository;
     private final RoleRepository roleRepository;
     private final JwtUtil jwtUtil;
+
+    @Transactional
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
@@ -59,6 +63,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                             .email(attributes.getEmail())
                             .provider(registrationId)
                             .roles(new HashSet<>(Arrays.asList(guestRole, userRole)))
+                            .createdDateTime(LocalDateTime.now())
                             .build();
                 });
 

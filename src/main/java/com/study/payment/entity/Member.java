@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Set;
 
 @Entity
@@ -29,7 +30,7 @@ public class Member implements UserDetails {
 
     private String password;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "member_role",
             joinColumns = @JoinColumn(name = "member_id"),
@@ -66,8 +67,8 @@ public class Member implements UserDetails {
 
     public UserRoles getHighestUserRole() {
         return this.roles.stream()
-                .map(Role::getUserRoles).min((r1, r2) -> r2.ordinal() - r1.ordinal())
+                .map(Role::getUserRoles)
+                .min(Comparator.comparingInt(Enum::ordinal))
                 .orElse(UserRoles.GUEST);
     }
-
 }
