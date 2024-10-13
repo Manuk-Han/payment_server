@@ -26,7 +26,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         String accessToken = jwtUtil.createAccessToken(principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
         String refreshToken = jwtUtil.createRefreshToken(principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
 
-        String redirectUrl = "http://localhost:3000/home";
+        String redirectUrl = "http://localhost:3000/";
         String PREFIX = "Bearer ";
         String encodedAccessToken = URLEncoder.encode(PREFIX + accessToken, StandardCharsets.UTF_8);
         String encodedRefreshToken = URLEncoder.encode(PREFIX + refreshToken, StandardCharsets.UTF_8);
