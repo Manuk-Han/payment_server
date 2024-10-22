@@ -1,7 +1,7 @@
 package com.study.payment.entity;
 
 import com.study.payment.common.UserRoles;
-import com.study.payment.dto.OAuthAttributes;
+import com.study.payment.dto.member.OAuthAttributes;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

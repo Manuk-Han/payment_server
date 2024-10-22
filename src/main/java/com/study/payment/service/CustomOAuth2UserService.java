@@ -2,7 +2,7 @@ package com.study.payment.service;
 
 import com.study.payment.common.UserRoles;
 import com.study.payment.common.jwt.JwtUtil;
-import com.study.payment.dto.OAuthAttributes;
+import com.study.payment.dto.member.OAuthAttributes;
 import com.study.payment.entity.Member;
 import com.study.payment.entity.PrincipalDetails;
 import com.study.payment.entity.Role;
@@ -10,7 +10,6 @@ import com.study.payment.repository.MemberRepository;
 import com.study.payment.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;

@@ -1,4 +1,4 @@
-package com.study.payment.dto;
+package com.study.payment.dto.member;
 
 import lombok.Data;
 import lombok.Getter;
