@@ -29,26 +29,16 @@ public class MemberController {
 
     @PostMapping("/member/signup")
     public ResponseEntity<?> signup(@RequestBody SignupForm signupForm) {
-        try {
-            memberService.signup(signupForm);
+        memberService.signup(signupForm);
 
-            return ResponseEntity.ok().build();
-        } catch (CustomException ce) {
-            return ResponseEntity.status(ce.getStatusCode())
-                    .body(ce.getCustomException());
-        }
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/member/signIn")
     public ResponseEntity<?> signIn(@RequestBody SignInForm signInForm) {
-        try {
-            JwtDto jwtDto = memberService.signIn(signInForm);
+        JwtDto jwtDto = memberService.signIn(signInForm);
 
-            return signIn(jwtDto);
-        } catch (CustomException ce) {
-            return ResponseEntity.status(ce.getStatusCode())
-                    .body(ce.getCustomException());
-        }
+        return signIn(jwtDto);
     }
 
     @GetMapping("/member/signIn/oauth")
