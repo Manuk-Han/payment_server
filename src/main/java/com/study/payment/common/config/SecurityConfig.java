@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/member/signup", "/member/signIn", "/test/*").permitAll()
+                        .requestMatchers("/product/**").permitAll()
                         .requestMatchers("/oauth2/**").authenticated()
                         .anyRequest().authenticated())
 //                .oauth2Login(AbstractHttpConfigurer::disable);

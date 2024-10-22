@@ -18,6 +18,8 @@ public enum CustomResponseException {
     EXIST_EMAIL(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),
     NOT_SUPPORTED_LOGIN_SERVICE(HttpStatus.BAD_REQUEST, "지원하지 않는 로그인 서비스입니다."),
 
+    NOT_FOUND_PRODUCT(HttpStatus.BAD_REQUEST, "존재하지 않는 상품입니다."),
+
     // 401 error
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
 

@@ -7,6 +7,7 @@ import com.study.payment.common.jwt.JwtDto;
 import com.study.payment.common.jwt.JwtUtil;
 import com.study.payment.dto.member.SignInForm;
 import com.study.payment.dto.member.SignupForm;
+import com.study.payment.dto.product.ProductDetailForm;
 import com.study.payment.dto.product.ProductForm;
 import com.study.payment.entity.Member;
 import com.study.payment.entity.Role;
@@ -32,9 +33,21 @@ public class ProductService {
     public List<ProductForm> getProductList() {
         return productRepository.findAll().stream()
                 .map(product -> ProductForm.builder()
+                        .productId(product.getProductId())
                         .name(product.getName())
                         .price(product.getPrice())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    public ProductDetailForm getProductDetail(Long productId) {
+        return productRepository.findById(productId)
+                .map(product -> ProductDetailForm.builder()
+                        .productId(product.getProductId())
+                        .name(product.getName())
+                        .price(product.getPrice())
+                        .stockQuantity(product.getStockQuantity())
+                        .build())
+                .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
     }
 }
