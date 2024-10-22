@@ -9,8 +9,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class GlobalControllerAdvice extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
-    private ResponseEntity<CustomException> handleCustomException(CustomException ce) {
-        return ResponseEntity.badRequest().body(ce);
+    private ResponseEntity<CustomResponseException> handleCustomException(CustomException ce) {
+        return ResponseEntity.badRequest().body(ce.getCustomException());
     }
 
     @ExceptionHandler(Exception.class)
