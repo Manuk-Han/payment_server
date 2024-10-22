@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .addFilter(corsFilter())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/member/signup", "/member/signIn").permitAll()
+                        .requestMatchers("/member/signup", "/member/signIn", "/test/*").permitAll()
                         .requestMatchers("/oauth2/**").authenticated()
                         .anyRequest().authenticated())
 //                .oauth2Login(AbstractHttpConfigurer::disable);
