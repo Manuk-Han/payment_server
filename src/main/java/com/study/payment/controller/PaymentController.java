@@ -1,5 +1,14 @@
 package com.study.payment.controller;
 
+import com.study.payment.common.excepion.CustomException;
+import com.study.payment.common.excepion.CustomResponseException;
+import com.study.payment.common.jwt.JwtUtil;
+import com.study.payment.dto.payment.PaymentForm;
+import com.study.payment.entity.Member;
+import com.study.payment.entity.Product;
+import com.study.payment.repository.MemberRepository;
+import com.study.payment.repository.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -11,14 +20,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
+@RequiredArgsConstructor
 @RequestMapping
 public class PaymentController {
+    private final ProductRepository productRepository;
+
+    private final MemberRepository memberRepository;
+
+    private final JwtUtil jwtUtil;
 
     @Value("${kakao.api.key}")
     private String kakaoApiKey;
 
-    @PostMapping("/payment")
-    public ResponseEntity<?> kakaoPayReady() {
+    @Value("${kakao.api.cid}")
+    private String kakaoCid;
+
+    @PostMapping("/payment/kakaoPayReady")
+    public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, PaymentForm paymentForm) {
         RestTemplate restTemplate = new RestTemplate();
 
         String apiUrl = "https://kapi.kakao.com/v1/payment/ready";
@@ -27,13 +45,20 @@ public class PaymentController {
         headers.set("Authorization", "KakaoAK " + kakaoApiKey);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
+        String userId = jwtUtil.getUserId(requestAccessToken);
+        Member member = memberRepository.findById(Long.valueOf(userId)).orElseThrow(
+                () -> new CustomException(CustomResponseException.NOT_FOUND_MEMBER));
+
+        Product product = productRepository.findById(paymentForm.getProductId()).orElseThrow(
+                () -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
+
         Map<String, String> params = new HashMap<>();
-        params.put("cid", "TC0ONETIME");
+        params.put("cid", kakaoCid);
         params.put("partner_order_id", "partner_order_id");
-        params.put("partner_user_id", "partner_user_id");
-        params.put("item_name", "상품판매");
-        params.put("quantity", "1");
-        params.put("total_amount", "5500");
+        params.put("partner_user_id", member.getEmail());
+        params.put("item_name", product.getName());
+        params.put("quantity", String.valueOf(paymentForm.getQuantity()));
+        params.put("total_amount", String.valueOf(product.getPrice() * paymentForm.getQuantity()));
         params.put("tax_free_amount", "0");
         params.put("approval_url", "http://localhost:3000/PayResult");
         params.put("cancel_url", "http://localhost:3000/kakaoPay");

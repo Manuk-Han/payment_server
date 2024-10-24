@@ -9,10 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Builder @Getter @Setter
@@ -29,6 +26,9 @@ public class Member implements UserDetails {
     private String email;
 
     private String password;
+
+    @OneToMany(mappedBy = "member")
+    private List<PaymentProduct> paymentProductList;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

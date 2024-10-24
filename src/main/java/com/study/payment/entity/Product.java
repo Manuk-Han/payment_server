@@ -1,10 +1,9 @@
 package com.study.payment.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Builder
@@ -21,4 +20,7 @@ public class Product {
     private int price;
 
     private int stockQuantity;
+
+    @OneToMany(mappedBy = "product")
+    private List<PaymentProduct> paymentProductList;
 }
