@@ -14,13 +14,45 @@ public class OAuthAttributes {
     private Map<String, Object> attributes;
 
     public static OAuthAttributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
-        return ofGoogle(userNameAttributeName, attributes);
+        switch (registrationId) {
+            case "kakao":
+                return ofKakao(userNameAttributeName, attributes);
+            case "naver":
+                return ofNaver(userNameAttributeName, attributes);
+            case "google":
+            default:
+                return ofGoogle(userNameAttributeName, attributes);
+        }
     }
 
-    public static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
+    private static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
         return OAuthAttributes.builder()
                 .name((String) attributes.get("name"))
                 .email((String) attributes.get("email"))
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)
+                .build();
+    }
+
+    private static OAuthAttributes ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+        String name = (String) ((Map<String, Object>) kakaoAccount.get("profile")).get("nickname");
+
+        return OAuthAttributes.builder()
+                .name(name)
+                .email(name)
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)
+                .build();
+    }
+
+    private static OAuthAttributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+        String name = (String) response.get("name");
+
+        return OAuthAttributes.builder()
+                .name(name)
+                .email("")
                 .attributes(attributes)
                 .nameAttributeKey(userNameAttributeName)
                 .build();
