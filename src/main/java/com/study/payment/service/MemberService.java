@@ -53,8 +53,8 @@ public class MemberService {
         }
 
         return JwtDto.builder()
-                .accessToken(jwtUtil.createAccessToken(member.getUsername(), UserRoles.USER))
-                .refreshToken(jwtUtil.createRefreshToken(member.getUsername(), UserRoles.USER))
+                .accessToken(jwtUtil.createAccessToken(member.getMemberId(), member.getUsername(), UserRoles.USER))
+                .refreshToken(jwtUtil.createRefreshToken(member.getMemberId(), member.getUsername(), UserRoles.USER))
                 .build();
     }
 }

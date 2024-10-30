@@ -23,10 +23,10 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
-        String accessToken = jwtUtil.createAccessToken(principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
-        String refreshToken = jwtUtil.createRefreshToken(principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
+        String accessToken = jwtUtil.createAccessToken(principalDetails.getMember().getMemberId(), principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
+        String refreshToken = jwtUtil.createRefreshToken(principalDetails.getMember().getMemberId(), principalDetails.getUsername(), principalDetails.getMember().getHighestUserRole());
 
-        String redirectUrl = "http://localhost:3000/";
+        String redirectUrl = "http://localhost:3000/oauth2/redirect";
         String PREFIX = "Bearer ";
         String encodedAccessToken = URLEncoder.encode(PREFIX + accessToken, StandardCharsets.UTF_8);
         String encodedRefreshToken = URLEncoder.encode(PREFIX + refreshToken, StandardCharsets.UTF_8);

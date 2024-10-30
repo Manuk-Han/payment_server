@@ -21,6 +21,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private final String USER_ID = "user_id";
+    private final String USER_NAME = "user_name";
     private final String ROLE = "role";
     private final Logger log = LoggerFactory.getLogger(this.getClass().getSimpleName());
     private final SecretKey key;
@@ -42,18 +43,19 @@ public class JwtUtil {
     }
 
 
-    public String createAccessToken(String userName, UserRoles userRoles) {
-        return createToken(userName, userRoles, accessTokenExpTime);
+    public String createAccessToken(Long userId, String userName, UserRoles userRoles) {
+        return createToken(userId, userName, userRoles, accessTokenExpTime);
     }
 
-    public String createRefreshToken(String userName, UserRoles userRoles) {
-        return createToken(userName, userRoles, refreshTokenExpTime);
+    public String createRefreshToken(Long userId, String userName, UserRoles userRoles) {
+        return createToken(userId, userName, userRoles, refreshTokenExpTime);
     }
 
 
-    private String createToken(String userName, UserRoles userRoles, long expireTime) {
+    private String createToken(Long userId, String userName, UserRoles userRoles, long expireTime) {
         Claims claims = Jwts.claims()
-                .add(USER_ID, userName)
+                .add(USER_ID, userId)
+                .add(USER_NAME, userName)
                 .add(ROLE, userRoles.getTitle())
                 .build();
 

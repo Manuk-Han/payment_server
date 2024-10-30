@@ -40,8 +40,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
         Member member = saveOrUpdate(attributes, registrationId);
-        String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getHighestUserRole());
-        String refreshToken = jwtUtil.createRefreshToken(member.getEmail(), member.getHighestUserRole());
+        String accessToken = jwtUtil.createAccessToken(member.getMemberId(), member.getEmail(), member.getHighestUserRole());
+        String refreshToken = jwtUtil.createRefreshToken(member.getMemberId(), member.getEmail(), member.getHighestUserRole());
 
         Map<String, Object> userAttributes = new HashMap<>(attributes.getAttributes());
         userAttributes.put("accessToken", accessToken);

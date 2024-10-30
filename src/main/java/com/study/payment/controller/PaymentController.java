@@ -18,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class PaymentController {
     private String kakaoCid;
 
     @PostMapping("/payment/kakaoPayReady")
-    public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, PaymentForm paymentForm) {
+    public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, @RequestBody PaymentForm paymentForm) {
         RestTemplate restTemplate = new RestTemplate();
 
         String apiUrl = "https://kapi.kakao.com/v1/payment/ready";
@@ -52,17 +53,22 @@ public class PaymentController {
         Product product = productRepository.findById(paymentForm.getProductId()).orElseThrow(
                 () -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
 
+        String partnerOrderId = generatePartnerOrderId();
+        String approvalUrl = "http://localhost:3000/PayResult";
+        String cancelUrl = "http://localhost:3000/kakaoPay";
+        String failUrl = "http://localhost:3000/kakaoPay";
+
         Map<String, String> params = new HashMap<>();
         params.put("cid", kakaoCid);
-        params.put("partner_order_id", "partner_order_id");
+        params.put("partner_order_id", partnerOrderId);
         params.put("partner_user_id", member.getEmail());
         params.put("item_name", product.getName());
         params.put("quantity", String.valueOf(paymentForm.getQuantity()));
         params.put("total_amount", String.valueOf(product.getPrice() * paymentForm.getQuantity()));
         params.put("tax_free_amount", "0");
-        params.put("approval_url", "http://localhost:3000/PayResult");
-        params.put("cancel_url", "http://localhost:3000/kakaoPay");
-        params.put("fail_url", "http://localhost:3000/kakaoPay");
+        params.put("approval_url", approvalUrl);
+        params.put("cancel_url", cancelUrl);
+        params.put("fail_url", failUrl);
 
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(params, headers);
 
@@ -80,4 +86,9 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("결제 준비 중 오류 발생");
         }
     }
+
+    private String generatePartnerOrderId() {
+        return "order_" + UUID.randomUUID().toString();
+    }
+
 }
