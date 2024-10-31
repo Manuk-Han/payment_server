@@ -3,6 +3,7 @@ package com.study.payment.common.jwt;
 import com.study.payment.common.UserRoles;
 import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
+import com.study.payment.entity.Member;
 import com.study.payment.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class JwtUtil {
@@ -93,18 +96,43 @@ public class JwtUtil {
         return false;
     }
 
+//    public Authentication getAuthentication(String token) {
+//        try {
+//            Long id = Long.valueOf((String) parseClaims(token).get(USER_ID));
+//            String role = parseClaims(token).get(ROLE).toString();
+//
+//            return new UsernamePasswordAuthenticationToken(
+//                        memberRepository.findById(id), "", memberRepository.findById(id).get().getAuthorities());
+//
+//        } catch (Exception e){
+//            throw new CustomException(CustomResponseException.TOKEN_INVALID);
+//        }
+//    }
+
     public Authentication getAuthentication(String token) {
         try {
-            String id = parseClaims(token).get(USER_ID).toString();
-            String role = parseClaims(token).get(ROLE).toString();
+            // parseClaims에서 추출한 클레임을 로그로 확인
+            Map<String, Object> claims = parseClaims(token);
+            System.out.println("Parsed claims: " + claims);
+
+            // 클레임에서 USER_ID와 ROLE 추출
+            Long id = Long.valueOf((String) claims.get(USER_ID));
+            String role = claims.get(ROLE).toString();
+
+            // 사용자 조회 및 존재 여부 확인
+            Optional<Member> member = memberRepository.findById(id);
+            if (member.isEmpty()) {
+                throw new CustomException(CustomResponseException.NOT_FOUND_MEMBER);
+            }
 
             return new UsernamePasswordAuthenticationToken(
-                        memberRepository.findMemberByEmail(id), "", memberRepository.findMemberByEmail(id).getAuthorities());
+                    member.get(), "", member.get().getAuthorities());
 
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new CustomException(CustomResponseException.TOKEN_INVALID);
         }
     }
+
 
     public Claims parseClaims(String accessToken) {
         try {

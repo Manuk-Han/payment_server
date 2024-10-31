@@ -14,6 +14,4 @@ public class PaymentForm {
     private Long productId;
 
     private int quantity;
-
-    private PaymentType paymentType;
 }

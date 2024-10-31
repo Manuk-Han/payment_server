@@ -39,6 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (IncorrectClaimException | UsernameNotFoundException e) {
             SecurityContextHolder.clearContext();
             response.sendError(403);
+            return;
         }
 
         filterChain.doFilter(request, response);
