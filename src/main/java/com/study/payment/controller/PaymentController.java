@@ -47,8 +47,7 @@ public class PaymentController {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         String userId = jwtUtil.getUserId(requestAccessToken);
-        Member member = memberRepository.findById(Long.valueOf(userId)).orElseThrow(
-                () -> new CustomException(CustomResponseException.NOT_FOUND_MEMBER));
+        Member member = memberRepository.findMemberByMemberId(Long.valueOf(userId));
 
         Product product = productRepository.findById(paymentForm.getProductId()).orElseThrow(
                 () -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));

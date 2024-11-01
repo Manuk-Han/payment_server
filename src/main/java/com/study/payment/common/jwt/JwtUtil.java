@@ -75,7 +75,11 @@ public class JwtUtil {
 
 
     public String getUserId(String token) {
-        return parseClaims(token.substring(7)).get(USER_ID, String.class);
+        Claims claims = this.parseClaims(token);
+
+        Object userId = claims.get(USER_ID);
+
+        return userId.toString();
     }
 
     public boolean validateAccessToken(String token) {
@@ -111,16 +115,16 @@ public class JwtUtil {
 
     public Authentication getAuthentication(String token) {
         try {
-            // parseClaims에서 추출한 클레임을 로그로 확인
             Map<String, Object> claims = parseClaims(token);
-            System.out.println("Parsed claims: " + claims);
 
-            // 클레임에서 USER_ID와 ROLE 추출
-            Long id = Long.valueOf((String) claims.get(USER_ID));
+            if (!claims.containsKey(USER_ID) || !claims.containsKey(ROLE)) {
+                throw new CustomException(CustomResponseException.TOKEN_INVALID);
+            }
+
+            String id = claims.get(USER_ID).toString();
             String role = claims.get(ROLE).toString();
 
-            // 사용자 조회 및 존재 여부 확인
-            Optional<Member> member = memberRepository.findById(id);
+            Optional<Member> member = memberRepository.findById(Long.valueOf(id));
             if (member.isEmpty()) {
                 throw new CustomException(CustomResponseException.NOT_FOUND_MEMBER);
             }
@@ -136,8 +140,13 @@ public class JwtUtil {
 
     public Claims parseClaims(String accessToken) {
         try {
-            return Jwts.parser().verifyWith(key)
+            if (accessToken != null && accessToken.startsWith("Bearer "))
+                accessToken = accessToken.substring(7).trim();
+
+            Claims claims = Jwts.parser().verifyWith(key)
                     .build().parseSignedClaims(accessToken).getPayload();
+
+            return claims;
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
