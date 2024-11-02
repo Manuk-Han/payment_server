@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -45,10 +47,10 @@ public class PaymentController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "KakaoAK " + kakaoApiKey);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        System.out.println("Authorization Header: " + headers.get("Authorization"));
 
         String userId = jwtUtil.getUserId(requestAccessToken);
         Member member = memberRepository.findMemberByMemberId(Long.valueOf(userId));
-
         Product product = productRepository.findById(paymentForm.getProductId()).orElseThrow(
                 () -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
 
@@ -57,19 +59,19 @@ public class PaymentController {
         String cancelUrl = "http://localhost:3000/kakaoPay";
         String failUrl = "http://localhost:3000/kakaoPay";
 
-        Map<String, String> params = new HashMap<>();
-        params.put("cid", kakaoCid);
-        params.put("partner_order_id", partnerOrderId);
-        params.put("partner_user_id", member.getEmail());
-        params.put("item_name", product.getName());
-        params.put("quantity", String.valueOf(paymentForm.getQuantity()));
-        params.put("total_amount", String.valueOf(product.getPrice() * paymentForm.getQuantity()));
-        params.put("tax_free_amount", "0");
-        params.put("approval_url", approvalUrl);
-        params.put("cancel_url", cancelUrl);
-        params.put("fail_url", failUrl);
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("cid", kakaoCid);
+        params.add("partner_order_id", partnerOrderId);
+        params.add("partner_user_id", member.getEmail());
+        params.add("item_name", product.getName());
+        params.add("quantity", String.valueOf(paymentForm.getQuantity()));
+        params.add("total_amount", String.valueOf(product.getPrice() * paymentForm.getQuantity()));
+        params.add("tax_free_amount", "0");
+        params.add("approval_url", approvalUrl);
+        params.add("cancel_url", cancelUrl);
+        params.add("fail_url", failUrl);
 
-        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(params, headers);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
 
         try {
             ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity, Map.class);
