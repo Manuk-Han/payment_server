@@ -36,7 +36,7 @@ public class KakaoPayService {
     @Value("${kakao.api.cid}")
     private String kakaoCid;
 
-    private final String KAKAO_API_URL = "https://kapi.kakao.com/v1/payment/ready";
+    private final String KAKAO_API_URL = "https://open-api.kakaopay.com/online/v1/payment/ready";
 
     public ReadyResponse payReady(Long userId, PaymentForm paymentForm) {
         Member member = memberRepository.findMemberByMemberId(userId);
