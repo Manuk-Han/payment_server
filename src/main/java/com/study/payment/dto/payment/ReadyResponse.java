@@ -10,5 +10,5 @@ import lombok.ToString;
 public class ReadyResponse {
 
     private String tid;
-    private String next_redirect_pc_url;
+    private String nextRedirectPcUrl;
 }

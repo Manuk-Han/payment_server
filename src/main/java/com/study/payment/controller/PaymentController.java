@@ -4,6 +4,7 @@ import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.common.jwt.JwtUtil;
 import com.study.payment.dto.payment.PaymentForm;
+import com.study.payment.dto.payment.ReadyResponse;
 import com.study.payment.entity.Member;
 import com.study.payment.entity.Product;
 import com.study.payment.repository.MemberRepository;
@@ -18,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,8 +42,12 @@ public class PaymentController {
     public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, @RequestBody PaymentForm paymentForm) {
         Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
 
-        kakaoPayService.payReady(userId, paymentForm);
+        ReadyResponse readyResponse = kakaoPayService.payReady(userId, paymentForm);
 
-        return ResponseEntity.ok().build();
+        Map<String, String> response = new HashMap<>();
+        response.put("redirectUrl", readyResponse.getNextRedirectPcUrl());
+        response.put("tid", readyResponse.getTid());
+
+        return ResponseEntity.ok(response);
     }
 }
