@@ -8,6 +8,7 @@ import com.study.payment.dto.payment.ReadyResponse;
 import com.study.payment.entity.Member;
 import com.study.payment.entity.Product;
 import com.study.payment.repository.MemberRepository;
+import com.study.payment.repository.PaymentProductRepository;
 import com.study.payment.repository.ProductRepository;
 import com.study.payment.service.KakaoPayService;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +28,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping
 public class PaymentController {
-    private final ProductRepository productRepository;
-    private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
     private final KakaoPayService kakaoPayService;
 
@@ -45,9 +44,25 @@ public class PaymentController {
         ReadyResponse readyResponse = kakaoPayService.payReady(userId, paymentForm);
 
         Map<String, String> response = new HashMap<>();
-        response.put("redirectUrl", readyResponse.getNextRedirectPcUrl());
+        response.put("redirectUrl", readyResponse.getNext_redirect_pc_url());
         response.put("tid", readyResponse.getTid());
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/payment/success")
+    public ResponseEntity<?> kakaoSuccess(
+            @RequestHeader("Authorization") String requestAccessToken,
+            @RequestParam("pg_token") String pgToken,
+            @RequestParam("tid") String tid,
+            @RequestParam("productId") Long productId,
+            @RequestParam("quantity") int quantity) {
+
+        Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
+
+        kakaoPayService.payApprove(tid, pgToken, userId, productId, quantity);
+
+        return ResponseEntity.ok().build();
+    }
+
 }

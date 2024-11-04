@@ -3,6 +3,8 @@ package com.study.payment.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Builder
 @Getter
@@ -12,7 +14,7 @@ import lombok.*;
 public class PaymentProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long paymentProductId;
 
     @ManyToOne
     @JoinColumn(name = "member_id")
@@ -25,5 +27,7 @@ public class PaymentProduct {
     private int quantity;
 
     private int price;
+
+    private LocalDateTime payedDateTime;
 }
 

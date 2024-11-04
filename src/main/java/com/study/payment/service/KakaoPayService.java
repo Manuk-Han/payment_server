@@ -7,8 +7,10 @@ import com.study.payment.dto.payment.ApproveResponse;
 import com.study.payment.dto.payment.PaymentForm;
 import com.study.payment.dto.payment.ReadyResponse;
 import com.study.payment.entity.Member;
+import com.study.payment.entity.PaymentProduct;
 import com.study.payment.entity.Product;
 import com.study.payment.repository.MemberRepository;
+import com.study.payment.repository.PaymentProductRepository;
 import com.study.payment.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +32,7 @@ import java.util.UUID;
 public class KakaoPayService {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+    private final PaymentProductRepository paymentProductRepository;
 
     @Value("${kakao.api.key}")
     private String kakaoApiKey;
@@ -69,22 +73,41 @@ public class KakaoPayService {
         }
     }
 
-    public ApproveResponse payApprove(String tid, String pgToken, Long userId) {
+    public ApproveResponse payApprove(String tid, String pgToken, Long userId, Long productId, int quantity) {
+        Member member = memberRepository.findMemberByMemberId(userId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
+
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("cid", "TC0ONETIME");
+        parameters.put("cid", kakaoCid);
         parameters.put("tid", tid);
         parameters.put("partner_order_id", "1234567890");
-        parameters.put("partner_user_id", memberRepository.findMemberByMemberId(userId).getEmail());
+        parameters.put("partner_user_id", member.getEmail());
         parameters.put("pg_token", pgToken);
 
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
 
         RestTemplate template = new RestTemplate();
         String url = "https://open-api.kakaopay.com/online/v1/payment/approve";
-        ApproveResponse approveResponse = template.postForObject(url, requestEntity, ApproveResponse.class);
-        log.info("결제승인 응답객체: " + approveResponse);
 
-        return approveResponse;
+        try {
+            ApproveResponse approveResponse = template.postForObject(url, requestEntity, ApproveResponse.class);
+            log.info("결제승인 응답객체: " + approveResponse);
+
+            PaymentProduct paymentProduct = PaymentProduct.builder()
+                    .member(member)
+                    .product(product)
+                    .quantity(quantity)
+                    .price(product.getPrice() * quantity)
+                    .payedDateTime(LocalDateTime.now())
+                    .build();
+            paymentProductRepository.save(paymentProduct);
+
+            return approveResponse;
+        } catch (Exception e) {
+            log.error("KakaoPay 결제 승인 요청 실패", e);
+            throw new CustomException(CustomResponseException.PAYMENT_APPROVAL_FAILED);
+        }
     }
 
     private HttpHeaders getHeaders() {
