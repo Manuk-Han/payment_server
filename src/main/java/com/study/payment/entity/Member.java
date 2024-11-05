@@ -16,7 +16,9 @@ import java.util.*;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class Member implements UserDetails {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
     private Long memberId;
 
     @Column(nullable = false)

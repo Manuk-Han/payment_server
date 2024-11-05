@@ -3,6 +3,7 @@ package com.study.payment.controller;
 import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.common.jwt.JwtUtil;
+import com.study.payment.dto.payment.ApproveForm;
 import com.study.payment.dto.payment.PaymentForm;
 import com.study.payment.dto.payment.ReadyResponse;
 import com.study.payment.entity.Member;
@@ -52,15 +53,11 @@ public class PaymentController {
 
     @PostMapping("/payment/success")
     public ResponseEntity<?> kakaoSuccess(
-            @RequestHeader("Authorization") String requestAccessToken,
-            @RequestParam("pg_token") String pgToken,
-            @RequestParam("tid") String tid,
-            @RequestParam("productId") Long productId,
-            @RequestParam("quantity") int quantity) {
+            @RequestHeader("Authorization") String requestAccessToken, ApproveForm approveForm) {
 
         Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
 
-        kakaoPayService.payApprove(tid, pgToken, userId, productId, quantity);
+        kakaoPayService.payApprove(approveForm, userId);
 
         return ResponseEntity.ok().build();
     }

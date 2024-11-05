@@ -12,7 +12,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class Product {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_id")
     private Long productId;
 
     private String name;
