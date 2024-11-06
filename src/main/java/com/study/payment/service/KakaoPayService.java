@@ -122,6 +122,9 @@ public class KakaoPayService {
                     .build();
             paymentProductRepository.save(paymentProduct);
 
+            product.removeStock(approveForm.getQuantity());
+            productRepository.save(product);
+
             return approveResponse;
         } catch (Exception e) {
             log.error("KakaoPay 결제 승인 요청 실패", e);

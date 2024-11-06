@@ -25,4 +25,12 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     private List<PaymentProduct> paymentProductList;
+
+    public void removeStock(int quantity) {
+        int restStock = this.stockQuantity - quantity;
+        if (restStock < 0) {
+            throw new IllegalStateException("need more stock");
+        }
+        this.stockQuantity = restStock;
+    }
 }
