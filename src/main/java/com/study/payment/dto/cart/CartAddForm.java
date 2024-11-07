@@ -12,6 +12,4 @@ public class CartAddForm {
     private Long productId;
 
     private int quantity;
-
-    private int totalPrice;
 }

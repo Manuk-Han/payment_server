@@ -53,6 +53,15 @@ public class CartService {
         Product product = productRepository.findById(cartAddForm.getProductId())
                 .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
 
+        if(cartRepository.existsByMemberAndProduct(member, product)) {
+            Cart cart = cartRepository.findByMemberAndProduct(member, product);
+
+            cart.addQuantity(cartAddForm.getQuantity());
+            cartRepository.save(cart);
+
+            return;
+        }
+
         Cart cart = Cart.builder()
                 .member(member)
                 .product(product)

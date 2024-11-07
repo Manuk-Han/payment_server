@@ -26,6 +26,9 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<PaymentProduct> paymentProductList;
 
+    @OneToMany(mappedBy = "product")
+    private List<Cart> cartList;
+
     public void removeStock(int quantity) {
         int restStock = this.stockQuantity - quantity;
         if (restStock < 0) {

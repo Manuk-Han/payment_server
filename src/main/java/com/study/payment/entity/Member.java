@@ -31,6 +31,12 @@ public class Member implements UserDetails {
     @OneToMany(mappedBy = "member")
     private List<PaymentProduct> paymentProductList;
 
+    @OneToMany(mappedBy = "member")
+    private List<Purchase> purchaseList;
+
+    @OneToMany(mappedBy = "member")
+    private List<Cart> cartList;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "member_role",

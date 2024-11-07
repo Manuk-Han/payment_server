@@ -29,4 +29,9 @@ public class Cart {
     private int totalPrice;
 
     private LocalDateTime cartDateTime;
+
+    public void addQuantity(int quantity) {
+        this.quantity += quantity;
+        this.totalPrice = this.product.getPrice() * this.quantity;
+    }
 }
