@@ -4,6 +4,7 @@ import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.common.jwt.JwtUtil;
 import com.study.payment.dto.payment.ApproveForm;
+import com.study.payment.dto.payment.CartPaymentForm;
 import com.study.payment.dto.payment.PaymentForm;
 import com.study.payment.dto.payment.ReadyResponse;
 import com.study.payment.entity.Member;
@@ -53,10 +54,10 @@ public class PaymentController {
     }
 
     @PostMapping("/payment/list/kakaoPayReady")
-    public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, List<PaymentForm> paymentFormList) {
+    public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, @RequestBody List<CartPaymentForm> cartPaymentFormList) {
         Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
 
-        ReadyResponse readyResponse = kakaoPayService.payReady(userId, paymentFormList);
+        ReadyResponse readyResponse = kakaoPayService.payReady(userId, cartPaymentFormList);
 
         Map<String, String> response = new HashMap<>();
         response.put("redirectUrl", readyResponse.getNext_redirect_pc_url());

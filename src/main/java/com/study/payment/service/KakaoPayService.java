@@ -2,18 +2,12 @@ package com.study.payment.service;
 
 import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
-import com.study.payment.dto.payment.ApproveForm;
-import com.study.payment.dto.payment.ApproveResponse;
-import com.study.payment.dto.payment.PaymentForm;
-import com.study.payment.dto.payment.ReadyResponse;
+import com.study.payment.dto.payment.*;
 import com.study.payment.entity.Member;
 import com.study.payment.entity.Purchase;
 import com.study.payment.entity.PaymentProduct;
 import com.study.payment.entity.Product;
-import com.study.payment.repository.MemberRepository;
-import com.study.payment.repository.PurchaseRepository;
-import com.study.payment.repository.PaymentProductRepository;
-import com.study.payment.repository.ProductRepository;
+import com.study.payment.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +27,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class KakaoPayService {
+    private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final PaymentProductRepository paymentProductRepository;
@@ -90,17 +85,17 @@ public class KakaoPayService {
         }
     }
 
-    public ReadyResponse payReady(Long userId, List<PaymentForm> paymentFormList) {
+    public ReadyResponse payReady(Long userId, List<CartPaymentForm> cartPaymentFormList) {
         Member member = memberRepository.findMemberByMemberId(userId);
 
         int totalAmount = 0;
         StringBuilder itemNames = new StringBuilder();
 
-        for (PaymentForm paymentForm : paymentFormList) {
-            Product product = productRepository.findById(paymentForm.getProductId())
+        for (CartPaymentForm cartPaymentForm : cartPaymentFormList) {
+            Product product = productRepository.findById(cartPaymentForm.getProductId())
                     .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
 
-            int productTotalPrice = product.getPrice() * paymentForm.getQuantity();
+            int productTotalPrice = product.getPrice() * cartPaymentForm.getQuantity();
             totalAmount += productTotalPrice;
 
             if (!itemNames.isEmpty()) {
@@ -111,11 +106,16 @@ public class KakaoPayService {
             purchaseRepository.save(Purchase.builder()
                     .member(member)
                     .product(product)
-                    .quantity(paymentForm.getQuantity())
+                    .quantity(cartPaymentForm.getQuantity())
                     .price(productTotalPrice)
                     .purchaseDateTime(LocalDateTime.now())
                     .partnerOrderId(generateUniqueOrderId())
                     .build());
+
+            product.removeStock(cartPaymentForm.getQuantity());
+            productRepository.save(product);
+
+            cartRepository.deleteById(cartPaymentForm.getCartId());
         }
 
         Map<String, String> parameters = new HashMap<>();
@@ -123,7 +123,7 @@ public class KakaoPayService {
         parameters.put("partner_order_id", generateUniqueOrderId());
         parameters.put("partner_user_id", member.getEmail());
         parameters.put("item_name", itemNames.toString());
-        parameters.put("quantity", String.valueOf(paymentFormList.size()));
+        parameters.put("quantity", String.valueOf(cartPaymentFormList.size()));
         parameters.put("total_amount", String.valueOf(totalAmount));
         parameters.put("tax_free_amount", "0");
         parameters.put("approval_url", "http://localhost:3000/payment/success");
