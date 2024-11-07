@@ -26,12 +26,7 @@ public class Cart {
 
     private int quantity;
 
-    private int price;
+    private int totalPrice;
 
     private LocalDateTime cartDateTime;
-
-    private String partnerOrderId;
-
-    @Nullable
-    private String errorMessage;
 }

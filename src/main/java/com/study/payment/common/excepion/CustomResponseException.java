@@ -22,6 +22,9 @@ public enum CustomResponseException {
     PAYMENT_READY_FAILED(HttpStatus.BAD_REQUEST, "결제 준비에 실패했습니다."),
     PAYMENT_APPROVAL_FAILED(HttpStatus.BAD_REQUEST, "결제 승인에 실패했습니다."),
 
+    NOT_FOUND_CART(HttpStatus.BAD_REQUEST, "존재하지 않는 장바구니입니다."),
+    NOT_FOUND_CART_PRODUCT(HttpStatus.BAD_REQUEST, "존재하지 않는 장바구니 상품입니다."),
+
     // 401 error
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
 

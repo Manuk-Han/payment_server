@@ -1,4 +1,4 @@
-package com.study.payment.dto.product;
+package com.study.payment.dto.cart;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,12 +8,10 @@ import lombok.Setter;
 @Data
 @Getter @Setter
 @Builder
-public class ProductDetailForm {
+public class CartAddForm {
     private Long productId;
 
-    private String name;
+    private int quantity;
 
-    private int price;
-
-    private int stockQuantity;
+    private int totalPrice;
 }
