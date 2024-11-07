@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -51,6 +52,19 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/payment/list/kakaoPayReady")
+    public ResponseEntity<?> kakaoPayReady(@RequestHeader("Authorization") String requestAccessToken, List<PaymentForm> paymentFormList) {
+        Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
+
+        ReadyResponse readyResponse = kakaoPayService.payReady(userId, paymentFormList);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("redirectUrl", readyResponse.getNext_redirect_pc_url());
+        response.put("tid", readyResponse.getTid());
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/payment/success")
     public ResponseEntity<?> kakaoSuccess(
             @RequestHeader("Authorization") String requestAccessToken, ApproveForm approveForm) {
@@ -58,6 +72,17 @@ public class PaymentController {
         Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
 
         kakaoPayService.payApprove(approveForm, userId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/payment/list/success")
+    public ResponseEntity<?> kakaoSuccess(
+            @RequestHeader("Authorization") String requestAccessToken, List<ApproveForm> approveFormList) {
+
+        Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
+
+        kakaoPayService.payApprove(approveFormList, userId);
 
         return ResponseEntity.ok().build();
     }

@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -89,6 +90,62 @@ public class KakaoPayService {
         }
     }
 
+    public ReadyResponse payReady(Long userId, List<PaymentForm> paymentFormList) {
+        Member member = memberRepository.findMemberByMemberId(userId);
+
+        int totalAmount = 0;
+        StringBuilder itemNames = new StringBuilder();
+
+        for (PaymentForm paymentForm : paymentFormList) {
+            Product product = productRepository.findById(paymentForm.getProductId())
+                    .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
+
+            int productTotalPrice = product.getPrice() * paymentForm.getQuantity();
+            totalAmount += productTotalPrice;
+
+            if (!itemNames.isEmpty()) {
+                itemNames.append(", ");
+            }
+            itemNames.append(product.getName());
+
+            purchaseRepository.save(Purchase.builder()
+                    .member(member)
+                    .product(product)
+                    .quantity(paymentForm.getQuantity())
+                    .price(productTotalPrice)
+                    .purchaseDateTime(LocalDateTime.now())
+                    .partnerOrderId(generateUniqueOrderId())
+                    .build());
+        }
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("cid", kakaoCid);
+        parameters.put("partner_order_id", generateUniqueOrderId());
+        parameters.put("partner_user_id", member.getEmail());
+        parameters.put("item_name", itemNames.toString());
+        parameters.put("quantity", String.valueOf(paymentFormList.size()));
+        parameters.put("total_amount", String.valueOf(totalAmount));
+        parameters.put("tax_free_amount", "0");
+        parameters.put("approval_url", "http://localhost:3000/payment/success");
+        parameters.put("cancel_url", "http://localhost:3000/payment/cancel");
+        parameters.put("fail_url", "http://localhost:3000/payment/fail");
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
+
+        RestTemplate template = new RestTemplate();
+        try {
+            ResponseEntity<ReadyResponse> responseEntity = template.postForEntity(KAKAO_READY_API_URL, requestEntity, ReadyResponse.class);
+            log.info("결제준비 응답객체: " + responseEntity.getBody());
+
+            return responseEntity.getBody();
+        } catch (Exception e) {
+            log.error("KakaoPay 결제 준비 요청 실패", e);
+            throw new CustomException(CustomResponseException.PAYMENT_READY_FAILED);
+        }
+    }
+
+
+
     public ApproveResponse payApprove(ApproveForm approveForm, Long userId) {
         Member member = memberRepository.findMemberByMemberId(userId);
         Product product = productRepository.findById(approveForm.getProductId())
@@ -126,6 +183,61 @@ public class KakaoPayService {
             productRepository.save(product);
 
             return approveResponse;
+        } catch (Exception e) {
+            log.error("KakaoPay 결제 승인 요청 실패", e);
+            throw new CustomException(CustomResponseException.PAYMENT_APPROVAL_FAILED);
+        }
+    }
+
+    public ApproveResponse payApprove(List<ApproveForm> approveFormList, Long userId) {
+        Member member = memberRepository.findMemberByMemberId(userId);
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("cid", kakaoCid);
+        parameters.put("partner_user_id", member.getEmail());
+
+        HttpHeaders headers = this.getHeaders();
+        RestTemplate template = new RestTemplate();
+
+        try {
+            ApproveResponse finalApproveResponse = null;
+
+            for (ApproveForm approveForm : approveFormList) {
+                Product product = productRepository.findById(approveForm.getProductId())
+                        .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
+
+                Purchase purchase = purchaseRepository.findTopByMemberAndProductAndErrorMessageIsNullOrderByPurchaseDateTimeDesc(member, product);
+
+                if (purchase == null) {
+                    throw new CustomException(CustomResponseException.PURCHASE_NOT_FOUND);
+                }
+
+                parameters.put("tid", approveForm.getTid());
+                parameters.put("partner_order_id", purchase.getPartnerOrderId());
+                parameters.put("pg_token", approveForm.getPgToken());
+
+                HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(parameters, headers);
+
+                ApproveResponse approveResponse = template.postForObject(KAKAO_APPROVE_API_URL, requestEntity, ApproveResponse.class);
+
+                if (approveResponse != null) {
+                    PaymentProduct paymentProduct = PaymentProduct.builder()
+                            .member(member)
+                            .product(product)
+                            .quantity(approveForm.getQuantity())
+                            .price(product.getPrice() * approveForm.getQuantity())
+                            .payedDateTime(LocalDateTime.now())
+                            .build();
+                    paymentProductRepository.save(paymentProduct);
+
+                    product.removeStock(approveForm.getQuantity());
+                    productRepository.save(product);
+
+                    finalApproveResponse = approveResponse;
+                }
+            }
+
+            return finalApproveResponse;
         } catch (Exception e) {
             log.error("KakaoPay 결제 승인 요청 실패", e);
             throw new CustomException(CustomResponseException.PAYMENT_APPROVAL_FAILED);
