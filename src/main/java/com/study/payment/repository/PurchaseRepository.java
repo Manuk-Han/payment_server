@@ -9,6 +9,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     Purchase findTopByMemberAndErrorMessageIsNullOrderByPurchaseDateTimeDesc(Member member);
-
-    Purchase findTopByMemberAndProductAndErrorMessageIsNullOrderByPurchaseDateTimeDesc(Member member, Product product);
 }

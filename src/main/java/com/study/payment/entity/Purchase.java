@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Builder
@@ -20,13 +21,10 @@ public class Purchase {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @OneToMany(mappedBy = "purchase")
+    private List<PurchaseProduct> purchaseProductList;
 
-    private int quantity;
-
-    private int price;
+    private int totalPrice;
 
     private LocalDateTime purchaseDateTime;
 

@@ -1,5 +1,6 @@
 package com.study.payment.dto.payment;
 
+import com.study.payment.entity.Purchase;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -15,7 +16,5 @@ public class ApproveForm {
 
     String tid;
 
-    Long productId;
-
-    int quantity;
+    Long purchaseId;
 }

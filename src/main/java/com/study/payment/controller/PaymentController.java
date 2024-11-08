@@ -72,20 +72,9 @@ public class PaymentController {
 
         Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
 
+
         kakaoPayService.payApprove(approveForm, userId);
 
         return ResponseEntity.ok().build();
     }
-
-    @PostMapping("/payment/list/success")
-    public ResponseEntity<?> kakaoSuccess(
-            @RequestHeader("Authorization") String requestAccessToken, List<ApproveForm> approveFormList) {
-
-        Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
-
-        kakaoPayService.payApprove(approveFormList, userId);
-
-        return ResponseEntity.ok().build();
-    }
-
 }

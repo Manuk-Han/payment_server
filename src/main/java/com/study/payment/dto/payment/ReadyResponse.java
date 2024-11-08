@@ -8,8 +8,6 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ReadyResponse {
-
     private String tid;
     private String next_redirect_pc_url;
-
 }

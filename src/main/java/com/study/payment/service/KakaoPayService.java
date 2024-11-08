@@ -3,10 +3,7 @@ package com.study.payment.service;
 import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.dto.payment.*;
-import com.study.payment.entity.Member;
-import com.study.payment.entity.Purchase;
-import com.study.payment.entity.PaymentProduct;
-import com.study.payment.entity.Product;
+import com.study.payment.entity.*;
 import com.study.payment.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -32,6 +26,7 @@ public class KakaoPayService {
     private final MemberRepository memberRepository;
     private final PaymentProductRepository paymentProductRepository;
     private final PurchaseRepository purchaseRepository;
+    private final PurchaseProductRepository purchaseProductRepository;
 
     @Value("${kakao.api.key}")
     private String kakaoApiKey;
@@ -48,30 +43,33 @@ public class KakaoPayService {
         Product product = productRepository.findById(paymentForm.getProductId())
                 .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
 
+        Purchase purchase = purchaseRepository.save(Purchase.builder()
+                .member(member)
+                .purchaseProductList(new ArrayList<>(Collections.singletonList(PurchaseProduct.builder()
+                        .product(product)
+                        .quantity(paymentForm.getQuantity())
+                        .price(product.getPrice() * paymentForm.getQuantity())
+                        .build())))
+                .totalPrice(product.getPrice() * paymentForm.getQuantity())
+                .purchaseDateTime(LocalDateTime.now())
+                .partnerOrderId(generateUniqueOrderId())
+                .build());
+
         Map<String, String> parameters = new HashMap<>();
         parameters.put("cid", kakaoCid);
-        parameters.put("partner_order_id", generateUniqueOrderId());
+        parameters.put("partner_order_id", purchase.getPartnerOrderId());
         parameters.put("partner_user_id", member.getEmail());
         parameters.put("item_name", product.getName());
         parameters.put("quantity", String.valueOf(paymentForm.getQuantity()));
         parameters.put("total_amount", String.valueOf(product.getPrice() * paymentForm.getQuantity()));
         parameters.put("tax_free_amount", "0");
-        parameters.put("approval_url", "http://localhost:3000/payment/success");
+        parameters.put("approval_url", "http://localhost:3000/payment/success?purchaseId=" + purchase.getPurchaseId());
         parameters.put("cancel_url", "http://localhost:3000/payment/cancel");
         parameters.put("fail_url", "http://localhost:3000/payment/fail");
 
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
 
         RestTemplate template = new RestTemplate();
-
-        Purchase purchase = purchaseRepository.save(Purchase.builder()
-                .member(member)
-                .product(product)
-                .quantity(paymentForm.getQuantity())
-                .price(product.getPrice() * paymentForm.getQuantity())
-                .purchaseDateTime(LocalDateTime.now())
-                .partnerOrderId(parameters.get("partner_order_id"))
-                .build());
 
         try {
             ResponseEntity<ReadyResponse> responseEntity = template.postForEntity(KAKAO_READY_API_URL, requestEntity, ReadyResponse.class);
@@ -90,6 +88,7 @@ public class KakaoPayService {
 
         int totalAmount = 0;
         StringBuilder itemNames = new StringBuilder();
+        List<PurchaseProduct> purchaseProductList = new ArrayList<>();
 
         for (CartPaymentForm cartPaymentForm : cartPaymentFormList) {
             Product product = productRepository.findById(cartPaymentForm.getProductId())
@@ -103,32 +102,45 @@ public class KakaoPayService {
             }
             itemNames.append(product.getName());
 
-            purchaseRepository.save(Purchase.builder()
-                    .member(member)
+            PurchaseProduct purchaseProduct = PurchaseProduct.builder()
                     .product(product)
                     .quantity(cartPaymentForm.getQuantity())
                     .price(productTotalPrice)
-                    .purchaseDateTime(LocalDateTime.now())
-                    .partnerOrderId(generateUniqueOrderId())
-                    .build());
+                    .build();
 
             product.removeStock(cartPaymentForm.getQuantity());
-            productRepository.save(product);
+            purchaseProductList.add(purchaseProduct);
 
+            purchaseProductRepository.save(purchaseProduct);
             cartRepository.deleteById(cartPaymentForm.getCartId());
         }
 
+        Purchase purchase = purchaseRepository.save(Purchase.builder()
+                .member(member)
+                .purchaseProductList(purchaseProductList)
+                .totalPrice(totalAmount)
+                .purchaseDateTime(LocalDateTime.now())
+                .partnerOrderId(generateUniqueOrderId())
+                .build());
+
+        purchaseProductList.forEach(purchaseProduct -> {
+            purchaseProduct.setPurchase(purchase);
+        });
+
+        purchaseProductRepository.saveAll(purchaseProductList);
+        purchaseRepository.save(purchase);
+
         Map<String, String> parameters = new HashMap<>();
         parameters.put("cid", kakaoCid);
-        parameters.put("partner_order_id", generateUniqueOrderId());
+        parameters.put("partner_order_id", purchase.getPartnerOrderId());
         parameters.put("partner_user_id", member.getEmail());
         parameters.put("item_name", itemNames.toString());
         parameters.put("quantity", String.valueOf(cartPaymentFormList.size()));
         parameters.put("total_amount", String.valueOf(totalAmount));
         parameters.put("tax_free_amount", "0");
-        parameters.put("approval_url", "http://localhost:3000/payment/success");
+        parameters.put("approval_url", "http://localhost:3000/payment/success?purchaseId=" + purchase.getPurchaseId());
         parameters.put("cancel_url", "http://localhost:3000/payment/cancel");
-        parameters.put("fail_url", "http://localhost:3000/payment/fail");
+        parameters.put("fail_url", "http://localhost:3000/paayment/fail");
 
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
 
@@ -148,8 +160,6 @@ public class KakaoPayService {
 
     public ApproveResponse payApprove(ApproveForm approveForm, Long userId) {
         Member member = memberRepository.findMemberByMemberId(userId);
-        Product product = productRepository.findById(approveForm.getProductId())
-                .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
         Purchase purchase = purchaseRepository.findTopByMemberAndErrorMessageIsNullOrderByPurchaseDateTimeDesc(member);
 
         Map<String, String> parameters = new HashMap<>();
@@ -170,74 +180,23 @@ public class KakaoPayService {
             ApproveResponse approveResponse = template.postForObject(KAKAO_APPROVE_API_URL, requestEntity, ApproveResponse.class);
             log.info("결제승인 응답객체: " + approveResponse);
 
-            PaymentProduct paymentProduct = PaymentProduct.builder()
-                    .member(member)
-                    .product(product)
-                    .quantity(approveForm.getQuantity())
-                    .price(product.getPrice() * approveForm.getQuantity())
-                    .payedDateTime(LocalDateTime.now())
-                    .build();
-            paymentProductRepository.save(paymentProduct);
+            for(PurchaseProduct purchaseProduct : purchase.getPurchaseProductList()) {
+                Product product = purchaseProduct.getProduct();
 
-            product.removeStock(approveForm.getQuantity());
-            productRepository.save(product);
+                PaymentProduct paymentProduct = PaymentProduct.builder()
+                        .member(member)
+                        .product(product)
+                        .quantity(purchaseProduct.getQuantity())
+                        .price(purchaseProduct.getPrice() * purchaseProduct.getQuantity())
+                        .payedDateTime(LocalDateTime.now())
+                        .build();
+                paymentProductRepository.save(paymentProduct);
 
-            return approveResponse;
-        } catch (Exception e) {
-            log.error("KakaoPay 결제 승인 요청 실패", e);
-            throw new CustomException(CustomResponseException.PAYMENT_APPROVAL_FAILED);
-        }
-    }
-
-    public ApproveResponse payApprove(List<ApproveForm> approveFormList, Long userId) {
-        Member member = memberRepository.findMemberByMemberId(userId);
-
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("cid", kakaoCid);
-        parameters.put("partner_user_id", member.getEmail());
-
-        HttpHeaders headers = this.getHeaders();
-        RestTemplate template = new RestTemplate();
-
-        try {
-            ApproveResponse finalApproveResponse = null;
-
-            for (ApproveForm approveForm : approveFormList) {
-                Product product = productRepository.findById(approveForm.getProductId())
-                        .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_PRODUCT));
-
-                Purchase purchase = purchaseRepository.findTopByMemberAndProductAndErrorMessageIsNullOrderByPurchaseDateTimeDesc(member, product);
-
-                if (purchase == null) {
-                    throw new CustomException(CustomResponseException.PURCHASE_NOT_FOUND);
-                }
-
-                parameters.put("tid", approveForm.getTid());
-                parameters.put("partner_order_id", purchase.getPartnerOrderId());
-                parameters.put("pg_token", approveForm.getPgToken());
-
-                HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(parameters, headers);
-
-                ApproveResponse approveResponse = template.postForObject(KAKAO_APPROVE_API_URL, requestEntity, ApproveResponse.class);
-
-                if (approveResponse != null) {
-                    PaymentProduct paymentProduct = PaymentProduct.builder()
-                            .member(member)
-                            .product(product)
-                            .quantity(approveForm.getQuantity())
-                            .price(product.getPrice() * approveForm.getQuantity())
-                            .payedDateTime(LocalDateTime.now())
-                            .build();
-                    paymentProductRepository.save(paymentProduct);
-
-                    product.removeStock(approveForm.getQuantity());
-                    productRepository.save(product);
-
-                    finalApproveResponse = approveResponse;
-                }
+                product.removeStock(purchaseProduct.getQuantity());
+                productRepository.save(product);
             }
 
-            return finalApproveResponse;
+            return approveResponse;
         } catch (Exception e) {
             log.error("KakaoPay 결제 승인 요청 실패", e);
             throw new CustomException(CustomResponseException.PAYMENT_APPROVAL_FAILED);
