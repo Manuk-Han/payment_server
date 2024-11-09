@@ -152,6 +152,10 @@ public class KakaoPayService {
             return responseEntity.getBody();
         } catch (Exception e) {
             log.error("KakaoPay 결제 준비 요청 실패", e);
+
+            purchase.setErrorMessage(e.getMessage());
+            purchaseRepository.save(purchase);
+
             throw new CustomException(CustomResponseException.PAYMENT_READY_FAILED);
         }
     }
