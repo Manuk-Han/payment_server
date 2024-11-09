@@ -68,6 +68,7 @@ public class CartService {
                 .quantity(cartAddForm.getQuantity())
                 .totalPrice(product.getPrice() * cartAddForm.getQuantity())
                 .cartDateTime(LocalDateTime.now())
+                .readyToPurchase(false)
                 .build();
 
         cartRepository.save(cart);

@@ -15,4 +15,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     boolean existsByMemberAndProduct(Member member, Product product);
 
     Cart findByMemberAndProduct(Member member, Product product);
+
+    void deleteByMemberAndProductAndReadyToPurchaseTrue(Member member, Product product);
 }

@@ -112,7 +112,11 @@ public class KakaoPayService {
             purchaseProductList.add(purchaseProduct);
 
             purchaseProductRepository.save(purchaseProduct);
-            cartRepository.deleteById(cartPaymentForm.getCartId());
+
+            Cart cart = cartRepository.findById(cartPaymentForm.getCartId())
+                    .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_CART));
+            cart.setReadyToPurchase(true);
+            cartRepository.save(cart);
         }
 
         Purchase purchase = purchaseRepository.save(Purchase.builder()
@@ -198,11 +202,17 @@ public class KakaoPayService {
 
                 product.removeStock(purchaseProduct.getQuantity());
                 productRepository.save(product);
+
+                cartRepository.deleteByMemberAndProductAndReadyToPurchaseTrue(member, product);
             }
 
             return approveResponse;
         } catch (Exception e) {
             log.error("KakaoPay 결제 승인 요청 실패", e);
+
+            purchase.setErrorMessage(e.getMessage());
+            purchaseRepository.save(purchase);
+
             throw new CustomException(CustomResponseException.PAYMENT_APPROVAL_FAILED);
         }
     }
