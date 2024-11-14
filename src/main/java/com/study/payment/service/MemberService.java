@@ -5,6 +5,7 @@ import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.common.jwt.JwtDto;
 import com.study.payment.common.jwt.JwtUtil;
+import com.study.payment.dto.member.ChangePasswordForm;
 import com.study.payment.dto.member.MyPage;
 import com.study.payment.dto.member.SignInForm;
 import com.study.payment.dto.member.SignupForm;
@@ -74,6 +75,21 @@ public class MemberService {
                 .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_MEMBER));
 
         member.update(myPage);
+
+        memberRepository.save(member);
+    }
+
+    public void updatePassword(Long memberId, ChangePasswordForm changePasswordForm) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_MEMBER));
+
+        if(member.getProvider() != null)
+            throw new CustomException(CustomResponseException.OAUTH_MEMBER);
+
+        if(!passwordEncoder.matches(changePasswordForm.getOldPassword(), member.getPassword()))
+            throw new CustomException(CustomResponseException.WRONG_PASSWORD);
+
+        member.setPassword(passwordEncoder.encode(changePasswordForm.getNewPassword()));
 
         memberRepository.save(member);
     }

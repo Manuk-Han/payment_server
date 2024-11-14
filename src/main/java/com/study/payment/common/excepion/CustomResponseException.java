@@ -17,6 +17,7 @@ public enum CustomResponseException {
     WRONG_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 틀렸습니다."),
     EXIST_EMAIL(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),
     NOT_SUPPORTED_LOGIN_SERVICE(HttpStatus.BAD_REQUEST, "지원하지 않는 로그인 서비스입니다."),
+    OAUTH_MEMBER(HttpStatus.BAD_REQUEST, "소셜 로그인 회원입니다."),
 
     NOT_FOUND_PRODUCT(HttpStatus.BAD_REQUEST, "존재하지 않는 상품입니다."),
     PAYMENT_READY_FAILED(HttpStatus.BAD_REQUEST, "결제 준비에 실패했습니다."),
