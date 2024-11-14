@@ -5,6 +5,7 @@ import com.study.payment.common.excepion.CustomException;
 import com.study.payment.common.excepion.CustomResponseException;
 import com.study.payment.common.jwt.JwtDto;
 import com.study.payment.common.jwt.JwtUtil;
+import com.study.payment.dto.member.MyPage;
 import com.study.payment.dto.member.SignInForm;
 import com.study.payment.dto.member.SignupForm;
 import com.study.payment.entity.Member;
@@ -56,5 +57,24 @@ public class MemberService {
                 .accessToken(jwtUtil.createAccessToken(member.getMemberId(), member.getUsername(), UserRoles.USER))
                 .refreshToken(jwtUtil.createRefreshToken(member.getMemberId(), member.getUsername(), UserRoles.USER))
                 .build();
+    }
+
+    public MyPage getMyPage(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_MEMBER));
+
+        return MyPage.builder()
+                .name(member.getName())
+                .email(member.getEmail())
+                .build();
+    }
+
+    public void updateMyPage(Long memberId, MyPage myPage) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(CustomResponseException.NOT_FOUND_MEMBER));
+
+        member.update(myPage);
+
+        memberRepository.save(member);
     }
 }

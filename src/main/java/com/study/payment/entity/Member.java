@@ -1,6 +1,7 @@
 package com.study.payment.entity;
 
 import com.study.payment.common.UserRoles;
+import com.study.payment.dto.member.MyPage;
 import com.study.payment.dto.member.OAuthAttributes;
 import jakarta.persistence.*;
 import lombok.*;
@@ -77,5 +78,14 @@ public class Member implements UserDetails {
                 .map(Role::getUserRoles)
                 .min(Comparator.comparingInt(Enum::ordinal))
                 .orElse(UserRoles.GUEST);
+    }
+
+    public void update(MyPage myPage) {
+        if(this.getProvider() != null && !Objects.equals(myPage.getEmail(), this.email)) {
+            throw new IllegalArgumentException("OAuth 회원은 수정할 수 없습니다.");
+        }
+
+        this.name = myPage.getName();
+        this.email = myPage.getEmail();
     }
 }
