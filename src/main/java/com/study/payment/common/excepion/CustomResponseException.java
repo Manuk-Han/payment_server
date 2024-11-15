@@ -22,6 +22,7 @@ public enum CustomResponseException {
     NOT_FOUND_PRODUCT(HttpStatus.BAD_REQUEST, "존재하지 않는 상품입니다."),
     PAYMENT_READY_FAILED(HttpStatus.BAD_REQUEST, "결제 준비에 실패했습니다."),
     PAYMENT_APPROVAL_FAILED(HttpStatus.BAD_REQUEST, "결제 승인에 실패했습니다."),
+    PAYMENT_ALREADY_APPROVED(HttpStatus.BAD_REQUEST, "이미 결제 승인된 상품입니다."),
 
     PURCHASE_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 구매내역입니다."),
 

@@ -1,5 +1,6 @@
 package com.study.payment.entity;
 
+import com.study.payment.common.PurchaseStatus;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,4 +33,6 @@ public class Purchase {
 
     @Nullable
     private String errorMessage;
+
+    private PurchaseStatus status;
 }

@@ -29,7 +29,7 @@ import java.time.Duration;
 public class MemberController {
     private final MemberService memberService;
 
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
     private static final Duration COOKIE_EXPIRATION = Duration.ofDays(7);
 
