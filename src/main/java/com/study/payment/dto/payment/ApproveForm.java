@@ -17,4 +17,6 @@ public class ApproveForm {
     String tid;
 
     Long purchaseId;
+
+    boolean fromCart;
 }

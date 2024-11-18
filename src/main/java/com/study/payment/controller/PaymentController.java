@@ -49,6 +49,7 @@ public class PaymentController {
         Map<String, String> response = new HashMap<>();
         response.put("redirectUrl", readyResponse.getNext_redirect_pc_url());
         response.put("tid", readyResponse.getTid());
+        response.put("cart", "false");
 
         return ResponseEntity.ok(response);
     }
@@ -62,6 +63,7 @@ public class PaymentController {
         Map<String, String> response = new HashMap<>();
         response.put("redirectUrl", readyResponse.getNext_redirect_pc_url());
         response.put("tid", readyResponse.getTid());
+        response.put("cart", "true");
 
         return ResponseEntity.ok(response);
     }
@@ -71,7 +73,6 @@ public class PaymentController {
             @RequestHeader("Authorization") String requestAccessToken, ApproveForm approveForm) {
 
         Long userId = Long.valueOf(jwtUtil.getUserId(requestAccessToken));
-
 
         kakaoPayService.payApprove(approveForm, userId);
 

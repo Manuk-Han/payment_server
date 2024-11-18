@@ -207,7 +207,10 @@ public class KakaoPayService {
                 productRepository.save(product);
             }
 
-            deleteCart(member, purchase.getPurchaseProductList().get(0).getProduct());
+            if(approveForm.isFromCart()) {
+                for(PurchaseProduct purchaseProduct : purchase.getPurchaseProductList())
+                    deleteCart(member, purchaseProduct.getProduct());
+            }
 
             return approveResponse;
         } catch (Exception e) {
