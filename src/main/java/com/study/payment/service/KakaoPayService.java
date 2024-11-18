@@ -67,7 +67,7 @@ public class KakaoPayService {
         parameters.put("quantity", String.valueOf(paymentForm.getQuantity()));
         parameters.put("total_amount", String.valueOf(product.getPrice() * paymentForm.getQuantity()));
         parameters.put("tax_free_amount", "0");
-        parameters.put("approval_url", "http://localhost:3000/payment/success?purchaseId=" + purchase.getPurchaseId());
+        parameters.put("approval_url", "http://localhost:3000/payment/success?purchaseId=" + purchase.getPurchaseId() + "&fromCart=false");
         parameters.put("cancel_url", "http://localhost:3000/payment/cancel");
         parameters.put("fail_url", "http://localhost:3000/payment/fail");
 
@@ -145,7 +145,7 @@ public class KakaoPayService {
         parameters.put("quantity", String.valueOf(cartPaymentFormList.size()));
         parameters.put("total_amount", String.valueOf(totalAmount));
         parameters.put("tax_free_amount", "0");
-        parameters.put("approval_url", "http://localhost:3000/payment/success?purchaseId=" + purchase.getPurchaseId());
+        parameters.put("approval_url", "http://localhost:3000/payment/success?purchaseId=" + purchase.getPurchaseId() + "&fromCart=true");
         parameters.put("cancel_url", "http://localhost:3000/payment/cancel");
         parameters.put("fail_url", "http://localhost:3000/payment/fail");
 
@@ -171,8 +171,22 @@ public class KakaoPayService {
         Member member = memberRepository.findMemberByMemberId(userId);
         Purchase purchase = purchaseRepository.findTopByMemberAndErrorMessageIsNullOrderByPurchaseDateTimeDesc(member);
 
-        if ("approved".equals(purchase.getStatus())) {
-            throw new CustomException(CustomResponseException.PAYMENT_ALREADY_APPROVED);
+        if (PurchaseStatus.APPROVED.equals(purchase.getStatus())) {
+            log.warn("결제가 이미 승인되었습니다: {}", purchase.getPartnerOrderId());
+            return ApproveResponse.builder()
+                    .approved_at(purchase.getPurchaseDateTime().toString())
+                    .aid(purchase.getPurchaseId().toString())
+                    .cid(kakaoCid)
+                    .item_code(purchase.getPurchaseProductList().get(0).getProduct().getProductId().toString())
+                    .item_name(purchase.getPurchaseProductList().get(0).getProduct().getName())
+                    .partner_order_id(purchase.getPartnerOrderId())
+                    .partner_user_id(member.getEmail())
+                    .payment_method_type("카카오페이")
+                    .quantity(purchase.getPurchaseProductList().get(0).getQuantity())
+                    .tid(purchase.getPurchaseProductList().get(0).getProduct().getProductId().toString())
+                    .created_at(purchase.getPurchaseDateTime().toString())
+                    .payload("")
+                    .build();
         }
 
         Map<String, String> parameters = new HashMap<>();
