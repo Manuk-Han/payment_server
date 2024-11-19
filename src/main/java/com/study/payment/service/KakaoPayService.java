@@ -202,8 +202,6 @@ public class KakaoPayService {
 
         try {
             ApproveResponse approveResponse = template.postForObject(KAKAO_APPROVE_API_URL, requestEntity, ApproveResponse.class);
-            purchase.setStatus(PurchaseStatus.APPROVED); // 승인 완료 후 상태 변경
-            purchaseRepository.save(purchase);
 
             for (PurchaseProduct purchaseProduct : purchase.getPurchaseProductList()) {
                 Product product = purchaseProduct.getProduct();
@@ -216,15 +214,15 @@ public class KakaoPayService {
                         .payedDateTime(LocalDateTime.now())
                         .build();
                 paymentProductRepository.save(paymentProduct);
-
-                product.removeStock(purchaseProduct.getQuantity());
-                productRepository.save(product);
             }
 
-            if(approveForm.isFromCart()) {
-                for(PurchaseProduct purchaseProduct : purchase.getPurchaseProductList())
-                    deleteCart(member, purchaseProduct.getProduct());
-            }
+            if(approveForm.isFromCart())
+                removeFromCart(member);
+
+            purchase.setStatus(PurchaseStatus.APPROVED); // 승인 완료 후 상태 변경
+            purchaseRepository.save(purchase);
+
+            log.info("결제 승인 완료: {}", approveResponse);
 
             return approveResponse;
         } catch (Exception e) {
@@ -237,11 +235,6 @@ public class KakaoPayService {
         }
     }
 
-    @Transactional
-    public void deleteCart(Member member, Product product) {
-        cartRepository.deleteByMemberAndProductAndReadyToPurchaseTrue(member, product);
-    }
-
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "DEV_SECRET_KEY " + kakaoApiKey);
@@ -252,5 +245,17 @@ public class KakaoPayService {
 
     public String generateUniqueOrderId() {
         return "ORDER-" + UUID.randomUUID();
+    }
+
+    @Transactional
+    public void removeFromCart(Member member){
+        for(Cart cart : cartRepository.findAllByMemberAndReadyToPurchaseTrue(member)){
+            Product product = cart.getProduct();
+
+            product.removeStock(cart.getQuantity());
+
+            productRepository.save(product);
+            cartRepository.delete(cart);
+        }
     }
 }

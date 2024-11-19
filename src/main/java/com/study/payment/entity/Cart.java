@@ -3,6 +3,7 @@ package com.study.payment.entity;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
 
