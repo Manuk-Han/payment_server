@@ -21,4 +21,9 @@ public class ProductController {
     public ResponseEntity<?> productDetail(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductDetail(productId));
     }
+
+    @GetMapping("/product/rank")
+    public ResponseEntity<?> productRank() {
+        return ResponseEntity.ok(productService.getProductRank());
+    }
 }
